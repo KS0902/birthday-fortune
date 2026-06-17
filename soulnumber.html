@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>誕生日占い</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1a1a2e;--ink-soft:#4a4a6a;--ink-muted:#8888aa;
+  --paper:#faf9f6;--accent:#6b4fa0;--accent-light:#e8e0f5;
+  --gold:#8a6500;--gold-light:#f5eed8;--teal:#2a7f7f;--teal-light:#e0f0f0;
+  --coral:#b05050;--coral-light:#f5e8e8;--border:rgba(26,26,46,0.12);--radius:12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Noto Sans JP',sans-serif;font-weight:300;min-height:100vh}
+.top-bar{height:3px;background:linear-gradient(90deg,var(--accent) 0%,#b8860b 50%,var(--teal) 100%)}
+.page{max-width:720px;margin:0 auto;padding:3rem 1.5rem 5rem}
+.hero{text-align:center;margin-bottom:2.5rem}
+.hero-eyebrow{font-family:'Shippori Mincho',serif;font-size:12px;letter-spacing:0.3em;color:var(--accent);margin-bottom:0.75rem}
+.hero h1{font-family:'Shippori Mincho',serif;font-size:clamp(26px,5vw,40px);font-weight:600;letter-spacing:0.08em;color:var(--ink);line-height:1.2;margin-bottom:0.75rem}
+.hero-sub{font-size:14px;color:var(--ink-muted);letter-spacing:0.04em;line-height:1.9}
+.divider{display:flex;align-items:center;gap:1rem;margin:2rem 0}
+.divider::before,.divider::after{content:'';flex:1;height:0.5px;background:var(--border)}
+.divider-gem{width:6px;height:6px;background:var(--accent);transform:rotate(45deg);flex-shrink:0}
+.tabs{display:flex;gap:0;border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:2rem;background:#fff}
+.tab{flex:1;padding:10px 0;font-family:'Shippori Mincho',serif;font-size:14px;letter-spacing:0.08em;color:var(--ink-muted);background:transparent;border:none;cursor:pointer;transition:all 0.15s;border-right:0.5px solid var(--border)}
+.tab:last-child{border-right:none}
+.tab.active{background:var(--accent);color:#fff;font-weight:500}
+.tab:hover:not(.active){background:var(--accent-light);color:var(--accent)}
+.input-card{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius);padding:1.75rem;margin-bottom:1.5rem}
+.field-label{font-size:11px;color:var(--ink-muted);letter-spacing:0.12em;margin-bottom:6px;display:block}
+.field-row{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+.field-row:last-child{margin-bottom:0}
+input[type="text"],input[type="date"]{height:44px;padding:0 14px;font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:300;color:var(--ink);background:var(--paper);border:0.5px solid var(--border);border-radius:8px;outline:none;transition:border-color 0.2s}
+input[type="text"]{flex:1}
+input[type="date"]{flex:1}
+input:focus{border-color:var(--accent)}
+.btn{height:44px;padding:0 24px;font-family:'Shippori Mincho',serif;font-size:15px;font-weight:500;letter-spacing:0.1em;color:#fff;background:var(--accent);border:none;border-radius:8px;cursor:pointer;white-space:nowrap;transition:opacity 0.15s,transform 0.1s}
+.btn:hover{opacity:0.88}
+.btn:active{transform:scale(0.97)}
+.btn-ghost{background:transparent;color:var(--ink-muted);border:0.5px solid var(--border);height:36px;padding:0 14px;font-size:13px;border-radius:8px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all 0.15s;white-space:nowrap}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:transparent;color:var(--coral);border:0.5px solid var(--coral-light);height:30px;padding:0 10px;font-size:12px;border-radius:6px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all 0.15s}
+.btn-danger:hover{background:var(--coral-light)}
+
+
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--ink-muted);font-size:14px;line-height:2}
+.empty-icon{font-size:32px;margin-bottom:0.5rem}
+.result-header{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
+.result-avatar{width:48px;height:48px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-family:'Shippori Mincho',serif;font-size:20px;color:var(--accent);flex-shrink:0}
+.result-name{font-family:'Shippori Mincho',serif;font-size:20px;font-weight:600;color:var(--ink)}
+.result-date{font-size:13px;color:var(--ink-muted);margin-top:2px}
+/* ===== 結果カード ===== */
+.result-panel{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.25rem}
+.rp-zodiac{padding:1.5rem 1.75rem 1.25rem;border-bottom:0.5px solid var(--border)}
+.rp-zodiac-top{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem}
+.rp-sym{font-size:28px;line-height:1}
+.rp-name{font-family:'Shippori Mincho',serif;font-size:20px;font-weight:600;color:var(--ink)}
+.rp-en{font-size:12px;color:var(--ink-muted);letter-spacing:0.08em}
+.rp-elem{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;margin-top:4px}
+.rp-desc{font-size:13px;color:var(--ink-soft);line-height:1.85;margin-top:0.75rem}
+/* ソウルナンバー行 */
+.sn-row{display:grid;grid-template-columns:1fr 1fr;border-bottom:0.5px solid var(--border)}
+.sn-row:last-child{border-bottom:none}
+.sn-cell{padding:1.25rem 1.5rem}
+.sn-cell+.sn-cell{border-left:0.5px solid var(--border)}
+.sn-label{font-size:10px;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:6px}
+.sn-num{font-family:'Shippori Mincho',serif;font-size:42px;font-weight:600;color:var(--ink);line-height:1}
+.sn-kw{font-size:12px;color:var(--ink-muted);margin-top:4px}
+.sn-lunar-info{font-size:11px;color:var(--teal);margin-top:2px}
+.sn-master{font-size:10px;background:var(--accent-light);color:var(--accent);border-radius:4px;padding:1px 6px;display:inline-block;margin-top:3px}
+/* 旧暦・六曜バー */
+.lunar-bar{display:flex;align-items:center;gap:1.5rem;padding:0.9rem 1.5rem;border-bottom:0.5px solid var(--border);flex-wrap:wrap;row-gap:0.4rem}
+.lunar-bar-item{display:flex;align-items:baseline;gap:0.35rem}
+.lbi-label{font-size:10px;color:var(--ink-muted);letter-spacing:0.1em}
+.lbi-val{font-family:'Shippori Mincho',serif;font-size:16px;font-weight:500;color:var(--ink)}
+.lbi-sep{color:var(--border);font-size:14px}
+/* ソウルナンバー計算ステップ */
+.sn-steps{padding:0 1.5rem 1.25rem}
+.sn-steps-title{font-size:10px;letter-spacing:0.1em;color:var(--ink-muted);margin-bottom:0.6rem}
+.calc-block{background:var(--paper);border-radius:8px;padding:0.875rem 1rem;font-size:13px;color:var(--ink-soft);line-height:1.9}
+.calc-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.calc-row:last-child{margin-bottom:0}
+.calc-digits{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.calc-d{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:0.5px solid var(--border);border-radius:4px;font-family:'Shippori Mincho',serif;font-weight:500;font-size:13px;background:#fff;color:var(--ink)}
+.calc-arrow{color:var(--ink-muted);font-size:12px;margin:0 2px}
+.calc-sum{font-family:'Shippori Mincho',serif;font-size:16px;font-weight:600;color:var(--accent)}
+.calc-label{font-size:11px;color:var(--ink-muted);white-space:nowrap}
+/* 保存カード */
+.saved-list{display:flex;flex-direction:column;gap:8px;margin-bottom:1.5rem}
+.saved-card{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;cursor:pointer;transition:border-color 0.15s;display:grid;grid-template-columns:1fr auto;gap:0.5rem;align-items:start}
+.saved-card:hover{border-color:var(--accent)}
+.sc-top{display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem}
+.sc-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-family:'Shippori Mincho',serif;font-size:14px;color:var(--accent);flex-shrink:0}
+.sc-name{font-family:'Shippori Mincho',serif;font-size:16px;font-weight:500;color:var(--ink)}
+.sc-date{font-size:11px;color:var(--ink-muted);margin-top:1px}
+.sc-data{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.sc-item{background:var(--paper);border-radius:7px;padding:7px 10px}
+.sc-item-label{font-size:9px;letter-spacing:0.1em;color:var(--ink-muted);margin-bottom:2px}
+.sc-item-val{font-family:'Shippori Mincho',serif;font-size:17px;font-weight:600;color:var(--ink);line-height:1.1}
+.sc-item-sub{font-size:10px;color:var(--ink-muted);margin-top:1px}
+/* 旧来のクラス（後方互換） */
+.tag{font-size:11px;letter-spacing:0.06em;padding:3px 10px;border-radius:20px}
+.tag-purple{background:var(--accent-light);color:var(--accent)}
+.tag-gold{background:var(--gold-light);color:var(--gold)}
+.tag-teal{background:var(--teal-light);color:var(--teal)}
+.summary-table{width:100%;border-collapse:collapse;font-size:13px}
+.summary-table td{padding:8px 0;border-bottom:0.5px solid var(--border);vertical-align:top;line-height:1.7}
+.summary-table td:first-child{color:var(--ink-muted);width:38%}
+.summary-table tr:last-child td{border-bottom:none}
+.hidden{display:none}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;font-size:13px;padding:10px 20px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;z-index:100;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.footer{text-align:center;margin-top:3rem;font-size:11px;color:var(--ink-muted);letter-spacing:0.08em}
+.save-row{display:flex;justify-content:flex-end;margin-bottom:1rem}
+@media(max-width:480px){
+  .page{padding:2rem 1rem 4rem}
+  .field-row{flex-wrap:wrap}
+  .cards-grid{grid-template-columns:repeat(2,1fr)}
+  .tabs .tab{font-size:12px;padding:9px 0}
+  .lunar-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="top-bar"></div>
+<div class="page">
+  <div class="hero">
+    <p class="hero-eyebrow">BIRTHDAY READING</p>
+    <h1>誕生日占い</h1>
+    <p class="hero-sub">生年月日から星座・ソウルナンバー・旧暦を読み解きます</p>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('input')">✦ 新しく占う</button>
+    <button class="tab" onclick="showTab('saved')">☽ 保存済み一覧</button>
+  </div>
+  <div id="tab-input">
+    <div class="input-card">
+      <label class="field-label">ニックネーム</label>
+      <div class="field-row">
+        <input type="text" id="nickname" placeholder="例：さくら、友達A、自分" maxlength="20" />
+      </div>
+      <label class="field-label">生年月日</label>
+      <div class="field-row">
+        <input type="text" id="bdate-y" placeholder="年" inputmode="numeric" maxlength="4" style="width:72px;flex:none" onkeydown="if(event.key==='Enter')calc()" oninput="if(this.value.length===4)document.getElementById('bdate-m').focus()" />
+        <span style="color:var(--ink-muted);font-size:14px">年</span>
+        <input type="text" id="bdate-m" placeholder="月" inputmode="numeric" maxlength="2" style="width:48px;flex:none" onkeydown="if(event.key==='Enter')calc()" oninput="if(this.value.length===2)document.getElementById('bdate-d').focus()" />
+        <span style="color:var(--ink-muted);font-size:14px">月</span>
+        <input type="text" id="bdate-d" placeholder="日" inputmode="numeric" maxlength="2" style="width:48px;flex:none" onkeydown="if(event.key==='Enter')calc()" />
+        <span style="color:var(--ink-muted);font-size:14px">日</span>
+        <button class="btn" onclick="calc()">占う</button>
+      </div>
+    </div>
+    <div id="result" class="hidden">
+      <div class="divider"><div class="divider-gem"></div></div>
+      <div class="save-row"><button class="btn-ghost" onclick="saveEntry()">＋ 保存する</button></div>
+      <div class="result-header">
+        <div class="result-avatar" id="res-avatar"></div>
+        <div><div class="result-name" id="res-name"></div><div class="result-date" id="res-date"></div></div>
+      </div>
+      <div id="sections"></div>
+      <div class="footer">生年月日のデータに基づいた占いの参考情報です</div>
+    </div>
+  </div>
+  <div id="tab-saved" class="hidden">
+    <div id="saved-list-wrap"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== ZODIAC ===== */
+const ZODIAC=[
+  {name:"山羊座",en:"Capricorn",sym:"♑",start:[12,22],end:[1,19],elem:"土",ruling:"土星",keyword:"忍耐・責任感・野心",desc:"堅実さと忍耐を武器に、高い目標を着実に登り続けるサイン。責任感が強く、どんな困難にも諦めません。長期的な計画と現実的な視点が持ち味で、社会的な成功を手にする力があります。"},
+  {name:"水瓶座",en:"Aquarius",sym:"♒",start:[1,20],end:[2,18],elem:"風",ruling:"天王星",keyword:"革新・独立心・博愛",desc:"時代の一歩先を行く革新者。型にはまらない独自の発想で、既存の枠を超えていきます。人類全体への愛と理想主義を持ちながら、独立心も旺盛。友人を大切にし、広いコミュニティの中で輝きます。"},
+  {name:"魚座",en:"Pisces",sym:"♓",start:[2,19],end:[3,20],elem:"水",ruling:"海王星",keyword:"直感・共感・夢想",desc:"深い共感力と豊かな想像力を持つ詩人のようなサイン。感受性が高く、目に見えないものを感じ取る直感があります。芸術・音楽・癒しの分野で才能を発揮し、周囲に安らぎをもたらします。"},
+  {name:"牡羊座",en:"Aries",sym:"♈",start:[3,21],end:[4,19],elem:"火",ruling:"火星",keyword:"情熱・行動力・開拓",desc:"黄道12サインの第一番。誰よりも先に飛び込む勇気と行動力が特徴です。情熱的でエネルギッシュ、新しいことへの挑戦を恐れません。リーダーとして道を切り開く先駆者です。"},
+  {name:"牡牛座",en:"Taurus",sym:"♉",start:[4,20],end:[5,20],elem:"土",ruling:"金星",keyword:"安定・忍耐・美的感覚",desc:"美しいものと心地よい環境を愛するサイン。五感が豊かで、質の高い生活を大切にします。一度決めたことをやり遂げる粘り強さと、信頼できる安定感が持ち味。着実に物事を積み上げる力があります。"},
+  {name:"双子座",en:"Gemini",sym:"♊",start:[5,21],end:[6,20],elem:"風",ruling:"水星",keyword:"知性・多才・好奇心",desc:"知的好奇心が尽きない多才なコミュニケーター。どんなテーマでも素早く吸収し、軽やかに話を展開します。社交的で機転が利き、さまざまな人と場面に適応できる柔軟さが魅力です。"},
+  {name:"蟹座",en:"Cancer",sym:"♋",start:[6,21],end:[7,22],elem:"水",ruling:"月",keyword:"感情豊か・母性・家庭",desc:"深い愛情と保護本能を持つサイン。家族と大切な人を守ることに喜びを感じます。感受性が高く、その場の雰囲気や人の感情を敏感に読み取ります。居心地のよい空間を作る才能があります。"},
+  {name:"獅子座",en:"Leo",sym:"♌",start:[7,23],end:[8,22],elem:"火",ruling:"太陽",keyword:"自信・創造性・リーダー",desc:"太陽のように輝くカリスマとリーダーシップが特徴。舞台の中心に立つことで力を発揮します。創造的でドラマティックな表現力があり、周囲を惹きつける魅力を持っています。"},
+  {name:"乙女座",en:"Virgo",sym:"♍",start:[8,23],end:[9,22],elem:"土",ruling:"水星",keyword:"分析力・完璧主義・奉仕",desc:"細部に宿る美しさを見逃さない分析の達人。完璧を追い求める職人気質と、人の役に立つことへの喜びが両立しています。論理的な思考と実務能力が高く、縁の下の力持ちとして信頼されます。"},
+  {name:"天秤座",en:"Libra",sym:"♎",start:[9,23],end:[10,22],elem:"風",ruling:"金星",keyword:"調和・公正・美意識",desc:"バランスと美と正義を愛するサイン。物事の両面を見渡し、公平な判断を下す力があります。美的センスが高く、人間関係を大切にする外交官タイプ。対話と協調を通じて豊かな関係を築きます。"},
+  {name:"蠍座",en:"Scorpio",sym:"♏",start:[10,23],end:[11,21],elem:"水",ruling:"冥王星",keyword:"洞察力・情熱・変革",desc:"表面の奥に隠れた真実を見通す洞察力の持ち主。情熱の深さは12サイン随一で、一度決めたことへの執念はゆるぎません。変容と再生の力を持ち、自分を何度でも新しく生まれ変わらせます。"},
+  {name:"射手座",en:"Sagittarius",sym:"♐",start:[11,22],end:[12,21],elem:"火",ruling:"木星",keyword:"自由・冒険・楽観",desc:"地平線の先を常に目指す冒険家。旅・哲学・学びへの飽くなき探求心が特徴です。楽観的で率直、自由を何より大切にします。広い視野から物事の本質を捉え、真理を追い求めます。"},
+];
+const SOUL_INFO={
+  1:{kw:"独立・先駆",desc:"自らの力で道を切り開くリーダータイプ。強い意志と独創性を持ち、ゼロから新しいものを生み出すことが得意です。"},
+  2:{kw:"協調・感受",desc:"繊細な感受性と高い共感力でパートナーシップを大切にするタイプ。縁の下の支え手として信頼され、人をつなぐ才能があります。"},
+  3:{kw:"創造・表現",desc:"豊かな創造力と明るいコミュニケーション力が持ち味。言葉・芸術・音楽など表現の場で才能を発揮します。"},
+  4:{kw:"基盤・堅実",desc:"地道な努力と規律で確かな基盤を築くタイプ。計画性が高く、コツコツ積み上げる力が強く、長期的な安定と信頼を手にします。"},
+  5:{kw:"変化・自由",desc:"変化と冒険を愛し、自由の中でこそ輝くタイプ。好奇心旺盛で多才、新しい刺激に素早く適応します。"},
+  6:{kw:"愛情・責任",desc:"愛と美と調和を大切にする養育者タイプ。家族・友人・コミュニティへの深い責任感があります。"},
+  7:{kw:"内省・探究",desc:"真実と知恵を求める内省的な探究者。直感と分析力を兼ね備え、深く考え抜いた独自の世界観を持ちます。"},
+  8:{kw:"達成・物質",desc:"強い意志と実行力で大きな成果を掴むタイプ。ビジネスや組織のマネジメントで力を発揮します。"},
+  9:{kw:"博愛・完成",desc:"広い視野と深い慈愛で人類全体へ奉仕するタイプ。芸術・人道支援・教育などで社会に貢献し、感動を与えます。"},
+  11:{kw:"直感・霊感",desc:"高い直感と霊的感受性を持つマスターナンバー。先見の明と精神的なインスピレーションで周囲を照らします。"},
+  22:{kw:"実現・構築",desc:"夢を現実に変える最強の実践者を示すマスターナンバー。大きなビジョンと緻密な計画力で、社会に残る大きな仕事を成し遂げます。"},
+  33:{kw:"愛・癒し",desc:"無条件の愛と癒しを体現するマスターナンバー。愛の教師として多くの人を導き、精神的な豊かさを分かち合います。"},
+};
+
+/* ===== 旧暦変換 (koyomi8方式: 朔日テーブル) =====
+   各旧暦月の朔日(=旧暦1日)を新暦YYYYMMDD形式で格納。
+   国立天文台・天文情報センターのデータおよびkoyomi8掲載データに準拠。
+   閏月は月番号に100を加算(例: 閏4月=104)。
+   通用期間: 1920〜2030年。
+*/
+const SAKUJITSU = [
+  // 各旧暦月の朔日[新暦YYYYMMDD, 旧暦月番号(閏月は+100)]
+  // 1920年
+  [19200220,1],[19200320,2],[19200419,3],[19200518,4],[19200617,5],[19200716,6],
+  [19200814,7],[19200913,8],[19201012,9],[19201111,10],[19201210,11],
+  // 1921年
+  [19210109,12],[19210208,1],[19210309,2],[19210408,3],[19210508,4],[19210607,5],
+  [19210706,6],[19210805,7],[19210904,8],[19211004,9],[19211102,10],[19211202,11],
+  // 1922年
+  [19220101,12],[19220131,1],[19220302,2],[19220401,3],[19220430,4],[19220530,5],
+  [19220628,105],[19220727,6],[19220826,7],[19220924,8],[19221024,9],[19221122,10],
+  [19221222,11],
+  // 1923年
+  [19230121,12],[19230219,1],[19230321,2],[19230420,3],[19230519,4],[19230618,5],
+  [19230718,6],[19230816,7],[19230915,8],[19231014,9],[19231113,10],[19231212,11],
+  // 1924年
+  [19240111,12],[19240210,1],[19240311,2],[19240410,3],[19240509,4],[19240609,5],
+  [19240708,6],[19240807,7],[19240906,8],[19241005,9],[19241104,10],[19241203,11],
+  // 1925年
+  [19250102,12],[19250201,13],[19250303,1],[19250402,2],[19250501,3],[19250531,4],
+  [19250630,104],[19250729,5],[19250828,6],[19250926,7],[19251026,8],[19251124,9],
+  [19251224,10],
+  // 1926年
+  [19260122,11],[19260221,1],[19260323,2],[19260422,3],[19260521,4],[19260620,5],
+  [19260720,6],[19260819,7],[19260918,8],[19261017,9],[19261116,10],[19261216,11],
+  // 1927年
+  [19270115,12],[19270214,1],[19270316,2],[19270414,3],[19270514,4],[19270613,5],
+  [19270713,6],[19270811,106],[19270910,7],[19271009,8],[19271108,9],[19271207,10],
+  // 1928年
+  [19280106,11],[19280205,1],[19280305,2],[19280404,3],[19280503,4],[19280602,5],
+  [19280701,6],[19280731,7],[19280829,8],[19280928,9],[19281027,10],[19281126,11],
+  [19281225,12],
+  // 1929年
+  [19290123,13],[19290222,1],[19290324,2],[19290422,3],[19290522,4],[19290621,5],
+  [19290720,6],[19290819,7],[19290918,8],[19291017,9],[19291116,10],[19291215,11],
+  // 1930年
+  [19300114,12],[19300213,1],[19300315,2],[19300414,3],[19300514,4],[19300612,5],
+  [19300712,6],[19300810,106],[19300909,7],[19301008,8],[19301107,9],[19301206,10],
+  // 1931年
+  [19310105,11],[19310204,12],[19310305,1],[19310404,2],[19310503,3],[19310602,4],
+  [19310702,5],[19310731,6],[19310830,7],[19310929,8],[19311028,9],[19311127,10],
+  [19311226,11],
+  // 1932年
+  [19320125,12],[19320224,1],[19320325,2],[19320423,3],[19320523,4],[19320621,5],
+  [19320721,6],[19320819,7],[19320918,8],[19321017,9],[19321116,10],[19321215,11],
+  // 1933年
+  [19330113,12],[19330212,1],[19330313,2],[19330412,3],[19330511,4],[19330611,5],
+  [19330710,105],[19330810,6],[19330909,7],[19331008,8],[19331107,9],[19331206,10],
+  // 1934年
+  [19340105,11],[19340204,12],[19340305,1],[19340404,2],[19340503,3],[19340603,4],
+  [19340702,5],[19340801,6],[19340831,7],[19340930,8],[19341029,9],[19341128,10],
+  [19341228,11],
+  // 1935年
+  [19350126,12],[19350225,1],[19350327,2],[19350426,3],[19350525,4],[19350624,5],
+  [19350724,6],[19350822,7],[19350921,8],[19351021,9],[19351119,10],[19351219,11],
+  // 1936年
+  [19360118,12],[19360217,1],[19360317,2],[19360416,3],[19360516,103],[19360615,4],
+  [19360714,5],[19360814,6],[19360912,7],[19361011,8],[19361110,9],[19361209,10],
+  // 1937年
+  [19370108,11],[19370207,12],[19370308,1],[19370407,2],[19370507,3],[19370606,4],
+  [19370705,5],[19370804,6],[19370903,7],[19371003,8],[19371101,9],[19371201,10],
+  [19371230,11],
+  // 1938年
+  [19380129,12],[19380228,1],[19380330,2],[19380429,3],[19380529,4],[19380628,5],
+  [19380727,6],[19380826,7],[19380925,107],[19381024,8],[19381123,9],[19381222,10],
+  // 1939年
+  [19390219,1],[19390321,2],[19390420,3],[19390519,4],[19390617,5],[19390717,6],
+  [19390815,7],[19390913,8],[19391013,9],[19391113,10],[19391211,11],
+  // 1940年
+  [19400109,12],[19400208,1],[19400309,2],[19400408,3],[19400507,4],[19400606,5],
+  [19400705,6],[19400804,7],[19400902,8],[19401002,9],[19401031,10],[19401129,11],
+  [19401229,12],
+  // 1941年
+  [19410127,1],[19410226,2],[19410328,3],[19410426,4],[19410526,5],[19410625,6],
+  [19410724,106],[19410823,7],[19410921,8],[19411021,9],[19411120,10],[19411218,11],
+  // 1942年
+  [19420115,12],[19420215,1],[19420317,2],[19420415,3],[19420515,4],[19420614,5],
+  [19420714,6],[19420812,7],[19420911,8],[19421011,9],[19421109,10],[19421208,11],
+  // 1943年
+  [19430108,12],[19430205,1],[19430306,2],[19430405,3],[19430504,4],[19430603,5],
+  [19430702,6],[19430801,7],[19430831,8],[19430929,9],[19431029,10],[19431128,11],
+  [19431227,12],
+  // 1944年
+  [19440126,1],[19440224,2],[19440324,3],[19440423,4],[19440522,104],[19440621,5],
+  [19440720,6],[19440819,7],[19440917,8],[19441017,9],[19441116,10],[19441215,11],
+  // 1945年
+  [19450114,12],[19450213,1],[19450314,2],[19450412,3],[19450512,4],[19450610,5],
+  [19450709,6],[19450808,7],[19450906,8],[19451006,9],[19451105,10],[19451205,11],
+  // 1946年
+  [19460103,12],[19460202,1],[19460304,2],[19460402,3],[19460501,4],[19460531,5],
+  [19460629,6],[19460728,7],[19460827,8],[19460925,9],[19461025,10],[19461124,11],
+  [19461223,12],
+  // 1947年
+  [19470122,1],[19470221,2],[19470323,102],[19470421,3],[19470521,4],[19470619,5],
+  [19470718,6],[19470816,7],[19470915,8],[19471014,9],[19471113,10],[19471212,11],
+  // 1948年
+  [19480112,12],[19480210,1],[19480311,2],[19480409,3],[19480509,4],[19480607,5],
+  [19480707,6],[19480805,7],[19480903,8],[19481003,9],[19481101,10],[19481201,11],
+  [19481230,12],
+  // 1949年
+  [19490129,1],[19490228,2],[19490330,3],[19490428,4],[19490528,5],[19490627,6],
+  [19490726,7],[19490824,107],[19490922,8],[19491022,9],[19491120,10],[19491220,11],
+  // 1950年
+  [19500119,12],[19500217,1],[19500319,2],[19500418,3],[19500517,4],[19500616,5],
+  [19500716,6],[19500814,7],[19500912,8],[19501012,9],[19501111,10],[19501209,11],
+  // 1951年
+  [19510109,12],[19510206,1],[19510308,2],[19510406,3],[19510506,4],[19510605,5],
+  [19510705,6],[19510803,7],[19510901,8],[19511001,9],[19511030,10],[19511129,11],
+  [19511228,12],
+  // 1952年
+  [19520127,1],[19520225,2],[19520325,3],[19520424,4],[19520524,5],[19520622,105],
+  [19520722,6],[19520821,7],[19520919,8],[19521019,9],[19521117,10],[19521216,11],
+  // 1953年
+  [19530115,12],[19530214,1],[19530315,2],[19530413,3],[19530513,4],[19530611,5],
+  [19530711,6],[19530810,7],[19530908,8],[19531008,9],[19531107,10],[19531206,11],
+  // 1954年
+  [19540104,12],[19540204,1],[19540305,2],[19540405,3],[19540503,4],[19540601,5],
+  [19540701,6],[19540730,7],[19540828,8],[19540927,9],[19541027,10],[19541125,11],
+  [19541225,12],
+  // 1955年
+  [19550124,1],[19550223,2],[19550324,3],[19550422,103],[19550522,4],[19550620,5],
+  [19550719,6],[19550818,7],[19550916,8],[19551016,9],[19551114,10],[19551214,11],
+  // 1956年
+  [19560113,12],[19560212,1],[19560312,2],[19560411,3],[19560510,4],[19560609,5],
+  [19560708,6],[19560806,7],[19560905,8],[19561004,9],[19561103,10],[19561202,11],
+  // 1957年
+  [19570102,12],[19570131,1],[19570302,2],[19570401,3],[19570430,4],[19570530,5],
+  [19570628,6],[19570727,7],[19570825,8],[19570924,108],[19571023,9],[19571122,10],
+  [19571221,11],
+  // 1958年
+  [19580120,12],[19580219,1],[19580320,2],[19580419,3],[19580519,4],[19580617,5],
+  [19580717,6],[19580815,7],[19580913,8],[19581013,9],[19581111,10],[19581211,11],
+  // 1959年
+  [19590109,12],[19590208,1],[19590309,2],[19590408,3],[19590508,4],[19590606,5],
+  [19590706,6],[19590804,7],[19590903,8],[19591002,9],[19591101,10],[19591130,11],
+  [19591230,12],
+  // 1960年
+  [19600128,1],[19600227,2],[19600327,3],[19600426,4],[19600525,5],[19600624,6],
+  [19600724,106],[19600822,7],[19600921,8],[19601020,9],[19601119,10],[19601218,11],
+  // 1961年
+  [19610117,12],[19610215,1],[19610317,2],[19610415,3],[19610515,4],[19610613,5],
+  [19610713,6],[19610811,7],[19610910,8],[19611010,9],[19611108,10],[19611208,11],
+  // 1962年
+  [19620105,12],[19620205,1],[19620306,2],[19620405,3],[19620504,4],[19620602,5],
+  [19620701,6],[19620731,7],[19620830,8],[19620929,9],[19621028,10],[19621127,11],
+  [19621227,12],
+  // 1963年
+  [19630125,1],[19630224,2],[19630325,3],[19630424,4],[19630523,104],[19630621,5],
+  [19630721,6],[19630819,7],[19630918,8],[19631017,9],[19631116,10],[19631216,11],
+  // 1964年
+  [19640115,12],[19640213,1],[19640314,2],[19640412,3],[19640512,4],[19640610,5],
+  [19640709,6],[19640808,7],[19640906,8],[19641006,9],[19641104,10],[19641204,11],
+  // 1965年
+  [19650102,12],[19650202,1],[19650303,2],[19650403,3],[19650501,4],[19650531,5],
+  [19650629,6],[19650728,7],[19650827,8],[19650925,9],[19651025,10],[19651123,11],
+  [19651223,12],
+  // 1966年
+  [19660122,1],[19660221,2],[19660322,3],[19660421,103],[19660520,4],[19660619,5],
+  [19660718,6],[19660816,7],[19660915,8],[19661014,9],[19661113,10],[19661212,11],
+  // 1967年
+  [19670111,12],[19670209,1],[19670311,2],[19670410,3],[19670509,4],[19670608,5],
+  [19670708,6],[19670806,7],[19670905,8],[19671004,9],[19671103,10],[19671202,11],
+  [19671231,12],
+  // 1968年
+  [19680130,1],[19680229,2],[19680329,3],[19680428,4],[19680527,5],[19680626,6],
+  [19680725,7],[19680824,107],[19680922,8],[19681021,9],[19681120,10],[19681220,11],
+  // 1969年
+  [19690119,12],[19690217,1],[19690319,2],[19690418,3],[19690517,4],[19690616,5],
+  [19690715,6],[19690813,7],[19690912,8],[19691011,9],[19691110,10],[19691209,11],
+  // 1970年
+  [19700109,12],[19700206,1],[19700307,2],[19700406,3],[19700505,4],[19700604,5],
+  [19700704,6],[19700802,7],[19700901,8],[19701001,9],[19701030,10],[19701129,11],
+  [19701228,12],
+  // 1971年
+  [19710127,1],[19710226,2],[19710327,3],[19710426,4],[19710526,5],[19710624,105],
+  [19710724,6],[19710822,7],[19710921,8],[19711021,9],[19711120,10],[19711219,11],
+  // 1972年
+  [19720118,12],[19720215,1],[19720315,2],[19720414,3],[19720513,4],[19720611,5],
+  [19720711,6],[19720809,7],[19720908,8],[19721008,9],[19721106,10],[19721206,11],
+  // 1973年
+  [19730103,12],[19730203,1],[19730305,2],[19730405,3],[19730503,4],[19730601,5],
+  [19730701,6],[19730730,7],[19730828,8],[19730926,9],[19731026,10],[19731125,11],
+  [19731225,12],
+  // 1974年
+  [19740123,1],[19740222,2],[19740324,3],[19740422,4],[19740522,104],[19740620,5],
+  [19740719,6],[19740818,7],[19740916,8],[19741015,9],[19741114,10],[19741214,11],
+  // 1975年
+  [19750111,12],[19750211,1],[19750313,2],[19750412,3],[19750511,4],[19750610,5],
+  [19750709,6],[19750807,7],[19750906,8],[19751005,9],[19751105,10],[19751203,11],
+  // 1976年
+  [19760101,12],[19760131,1],[19760301,2],[19760331,3],[19760429,4],[19760529,5],
+  [19760627,6],[19760727,7],[19760825,8],[19760924,108],[19761023,9],[19761122,10],
+  [19761221,11],
+  // 1977年
+  [19770120,12],[19770218,1],[19770320,2],[19770419,3],[19770518,4],[19770617,5],
+  [19770716,6],[19770815,7],[19770913,8],[19771013,9],[19771112,10],[19771211,11],
+  // 1978年
+  [19780107,12],[19780207,1],[19780308,2],[19780407,3],[19780507,4],[19780606,5],
+  [19780705,6],[19780804,7],[19780903,8],[19781002,9],[19781101,10],[19781130,11],
+  [19781230,12],
+  // 1979年
+  [19790128,1],[19790227,2],[19790328,3],[19790426,4],[19790526,5],[19790624,6],
+  [19790724,106],[19790823,7],[19790921,8],[19791021,9],[19791120,10],[19791219,11],
+  // 1980年
+  [19800118,12],[19800216,1],[19800316,2],[19800415,3],[19800514,4],[19800613,5],
+  [19800712,6],[19800811,7],[19800909,8],[19801009,9],[19801108,10],[19801207,11],
+  // 1981年
+  [19810107,12],[19810205,1],[19810306,2],[19810405,3],[19810504,4],[19810602,5],
+  [19810702,6],[19810731,7],[19810829,8],[19810928,9],[19811028,10],[19811126,11],
+  [19811226,12],
+  // 1982年
+  [19820125,1],[19820224,2],[19820325,3],[19820424,4],[19820523,104],[19820621,5],
+  [19820721,6],[19820819,7],[19820917,8],[19821017,9],[19821116,10],[19821215,11],
+  // 1983年
+  [19830113,12],[19830213,1],[19830314,2],[19830413,3],[19830513,4],[19830611,5],
+  [19830711,6],[19830809,7],[19830907,8],[19831006,9],[19831105,10],[19831204,11],
+  // 1984年
+  [19840102,12],[19840202,1],[19840302,2],[19840401,3],[19840430,4],[19840531,5],
+  [19840629,6],[19840728,7],[19840827,8],[19840925,9],[19841024,10],[19841123,110],
+  [19841222,11],
+  // 1985年
+  [19850220,1],[19850321,2],[19850420,3],[19850520,4],[19850618,5],[19850718,6],
+  [19850816,7],[19850915,8],[19851014,9],[19851112,10],[19851212,11],
+  // 1986年
+  [19860209,1],[19860310,2],[19860409,3],[19860509,4],[19860607,5],[19860707,6],
+  [19860806,7],[19860904,8],[19861004,9],[19861102,10],[19861202,11],[19861231,12],
+  // 1987年
+  [19870129,1],[19870228,2],[19870329,3],[19870428,4],[19870528,5],[19870626,6],
+  [19870726,106],[19870824,7],[19870923,8],[19871023,9],[19871121,10],[19871221,11],
+  // 1988年
+  [19880218,1],[19880318,2],[19880416,3],[19880516,4],[19880614,5],[19880714,6],
+  [19880812,7],[19880911,8],[19881011,9],[19881109,10],[19881209,11],
+  // 1989年
+  [19890206,1],[19890308,2],[19890406,3],[19890505,4],[19890604,5],[19890703,6],
+  [19890802,7],[19890831,8],[19890930,9],[19891030,10],[19891128,11],[19891228,12],
+  // 1990年
+  [19900127,1],[19900225,2],[19900327,3],[19900425,4],[19900524,5],[19900623,105],
+  [19900722,6],[19900820,7],[19900919,8],[19901019,9],[19901117,10],[19901217,11],
+  // 1991年
+  [19910215,1],[19910316,2],[19910415,3],[19910514,4],[19910612,5],[19910712,6],
+  [19910810,7],[19910908,8],[19911008,9],[19911106,10],[19911206,11],
+  // 1992年
+  [19920204,1],[19920304,2],[19920403,3],[19920503,4],[19920601,5],[19920630,6],
+  [19920730,7],[19920828,8],[19920926,9],[19921026,10],[19921124,11],[19921224,12],
+  // 1993年
+  [19930123,1],[19930221,2],[19930323,3],[19930422,103],[19930521,4],[19930620,5],
+  [19930719,6],[19930818,7],[19930916,8],[19931015,9],[19931114,10],[19931213,11],
+  // 1994年
+  [19940210,1],[19940312,2],[19940411,3],[19940511,4],[19940609,5],[19940709,6],
+  [19940807,7],[19940906,8],[19941005,9],[19941103,10],[19941203,11],
+  // 1995年
+  [19950131,1],[19950301,2],[19950331,3],[19950430,4],[19950529,5],[19950628,6],
+  [19950728,7],[19950826,8],[19950925,108],[19951024,9],[19951123,10],[19951222,11],
+  // 1996年
+  [19960219,1],[19960319,2],[19960418,3],[19960517,4],[19960616,5],[19960716,6],
+  [19960814,7],[19960913,8],[19961012,9],[19961111,10],[19961211,11],
+  // 1997年
+  [19970208,1],[19970309,2],[19970407,3],[19970507,4],[19970605,5],[19970705,6],
+  [19970803,7],[19970902,8],[19971002,9],[19971031,10],[19971130,11],[19971230,12],
+  // 1998年
+  [19980128,1],[19980227,2],[19980328,3],[19980426,4],[19980526,5],[19980624,105],
+  [19980723,6],[19980822,7],[19980921,8],[19981020,9],[19981119,10],[19981219,11],
+  // 1999年
+  [19990216,1],[19990318,2],[19990416,3],[19990515,4],[19990614,5],[19990713,6],
+  [19990811,7],[19990910,8],[19991009,9],[19991108,10],[19991208,11],
+  // 2000年
+  [20000106,1],[20000205,1],[20000306,2],[20000405,3],[20000504,4],[20000603,5],
+  [20000703,6],[20000801,7],[20000831,8],[20000929,9],[20001027,10],[20001126,11],
+  // 2001年
+  [20010124,1],[20010223,2],[20010325,3],[20010424,4],[20010523,104],[20010621,5],
+  [20010721,6],[20010819,7],[20010917,8],[20011017,9],[20011115,10],[20011215,11],
+  // 2002年
+  [20020113,12],[20020212,1],[20020314,2],[20020412,3],[20020512,4],[20020611,5],
+  [20020710,6],[20020809,7],[20020907,8],[20021007,9],[20021106,10],[20021205,11],
+  // 2003年
+  [20030103,12],[20030201,1],[20030303,2],[20030402,3],[20030501,4],[20030531,5],
+  [20030630,6],[20030729,7],[20030828,8],[20030926,9],[20031026,10],[20031124,11],
+  // 2004年
+  [20040122,1],[20040221,2],[20040321,102],[20040420,3],[20040519,4],[20040617,5],
+  [20040717,6],[20040816,7],[20040914,8],[20041014,9],[20041113,10],[20041212,11],
+  // 2005年
+  [20050110,12],[20050209,1],[20050310,2],[20050409,3],[20050508,4],[20050607,5],
+  [20050706,6],[20050805,7],[20050904,8],[20051004,9],[20051103,10],[20051202,11],
+  // 2006年
+  [20060101,12],[20060130,1],[20060301,2],[20060330,3],[20060429,4],[20060528,5],
+  [20060627,6],[20060727,7],[20060825,107],[20060924,8],[20061024,9],[20061123,10],
+  // 2007年
+  [20070119,11],[20070218,1],[20070319,2],[20070417,3],[20070517,4],[20070616,5],
+  [20070715,6],[20070814,7],[20070913,8],[20071013,9],[20071111,10],[20071211,11],
+  // 2008年
+  [20080108,12],[20080207,1],[20080307,2],[20080406,3],[20080506,4],[20080603,5],
+  [20080703,6],[20080801,7],[20080831,8],[20080930,9],[20081029,10],[20081128,11],
+  // 2009年
+  [20090126,1],[20090225,2],[20090326,3],[20090425,4],[20090524,5],[20090623,105],
+  [20090722,6],[20090820,7],[20090919,8],[20091018,9],[20091117,10],[20091217,11],
+  // 2010年
+  [20100115,12],[20100214,1],[20100315,2],[20100414,3],[20100514,4],[20100612,5],
+  [20100712,6],[20100810,7],[20100908,8],[20101008,9],[20101107,10],[20101206,11],
+  // 2011年
+  [20110104,12],[20110203,1],[20110305,2],[20110403,3],[20110503,4],[20110601,5],
+  [20110701,6],[20110730,7],[20110829,8],[20110927,9],[20111027,10],[20111126,11],
+  // 2012年
+  [20120123,1],[20120222,2],[20120322,3],[20120421,4],[20120521,104],[20120619,5],
+  [20120719,6],[20120817,7],[20120916,8],[20121015,9],[20121114,10],[20121213,11],
+  // 2013年
+  [20130110,12],[20130210,1],[20130311,2],[20130410,3],[20130510,4],[20130608,5],
+  [20130708,6],[20130806,7],[20130905,8],[20131005,9],[20131104,10],[20131203,11],
+  // 2014年
+  [20140131,1],[20140301,2],[20140330,3],[20140429,4],[20140528,5],[20140627,6],
+  [20140727,7],[20140825,8],[20140924,9],[20141022,10],[20141024,109],[20141122,11],
+  // 2015年
+  [20150120,12],[20150219,1],[20150320,2],[20150419,3],[20150518,4],[20150616,5],
+  [20150716,6],[20150814,7],[20150913,8],[20151013,9],[20151111,10],[20151211,11],
+  // 2016年
+  [20160108,12],[20160208,1],[20160309,2],[20160407,3],[20160506,4],[20160605,5],
+  [20160704,6],[20160803,7],[20160901,8],[20161001,9],[20161030,10],[20161129,11],
+  // 2017年
+  [20170128,1],[20170226,2],[20170328,3],[20170426,4],[20170526,5],[20170624,6],
+  [20170723,106],[20170821,7],[20170920,8],[20171020,9],[20171118,10],[20171218,11],
+  // 2018年
+  [20180117,12],[20180216,1],[20180317,2],[20180416,3],[20180515,4],[20180613,5],
+  [20180713,6],[20180811,7],[20180909,8],[20181009,9],[20181108,10],[20181207,11],
+  // 2019年
+  [20190105,12],[20190205,1],[20190306,2],[20190405,3],[20190505,4],[20190603,5],
+  [20190703,6],[20190801,7],[20190830,8],[20190929,9],[20191029,10],[20191126,11],
+  // 2020年
+  [20200125,1],[20200223,2],[20200324,3],[20200423,4],[20200523,104],[20200621,5],
+  [20200721,6],[20200819,7],[20200917,8],[20201017,9],[20201116,10],[20201215,11],
+  // 2021年
+  [20210113,12],[20210212,1],[20210313,2],[20210412,3],[20210511,4],[20210610,5],
+  [20210710,6],[20210808,7],[20210907,8],[20211006,9],[20211105,10],[20211204,11],
+  // 2022年
+  [20220103,12],[20220201,1],[20220303,2],[20220401,3],[20220430,4],[20220530,5],
+  [20220629,6],[20220729,7],[20220827,8],[20220926,9],[20221025,10],[20221124,11],
+  // 2023年
+  [20230122,1],[20230220,2],[20230322,102],[20230420,3],[20230519,4],[20230618,5],
+  [20230718,6],[20230816,7],[20230915,8],[20231015,9],[20231113,10],[20231213,11],
+  // 2024年
+  [20240111,12],[20240210,1],[20240310,2],[20240409,3],[20240508,4],[20240606,5],
+  [20240706,6],[20240804,7],[20240903,8],[20241003,9],[20241102,10],[20241201,11],
+  // 2025年
+  [20250129,1],[20250228,2],[20250329,3],[20250427,4],[20250527,5],[20250625,6],
+  [20250725,106],[20250823,7],[20250921,8],[20251021,9],[20251120,10],[20251220,11],
+];
+
+const STEMS=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+const BRANCHES=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+const ANIMALS=["ねずみ","うし","とら","うさぎ","たつ","へび","うま","ひつじ","さる","とり","いぬ","いのしし"];
+const ROKKI=["大安","赤口","先勝","友引","先負","仏滅"];
+
+function dateToInt(y,m,d){return y*10000+m*100+d;}
+
+function toLunar(gy,gm,gd){
+  const target=dateToInt(gy,gm,gd);
+  // 朔日テーブルから該当月を探す
+  let found=null;
+  let foundIdx=-1;
+  for(let i=0;i<SAKUJITSU.length;i++){
+    if(SAKUJITSU[i][0]<=target){found=SAKUJITSU[i];foundIdx=i;}
+    else break;
+  }
+  if(!found)return null;
+  const [sakuInt,lmonthRaw]=found;
+  // 旧暦日 = target - 朔日 + 1
+  const sy=Math.floor(sakuInt/10000);
+  const sm=Math.floor((sakuInt%10000)/100);
+  const sd=sakuInt%100;
+  // 日差を計算（Julian Day差）
+  function toJD(y,m,d){
+    const a=Math.floor((14-m)/12);const yr=y+4800-a;const mo=m+12*a-3;
+    return d+Math.floor((153*mo+2)/5)+365*yr+Math.floor(yr/4)-Math.floor(yr/100)+Math.floor(yr/400)-32045;
+  }
+  const lday=toJD(gy,gm,gd)-toJD(sy,sm,sd)+1;
+  const isLeap=lmonthRaw>100;
+  const lmonth=isLeap?lmonthRaw-100:lmonthRaw;
+
+  // 旧暦年を推定（その年の旧暦1月の朔日から判断）
+  // 該当朔日が属する旧暦年を特定
+  // 旧暦年 ≒ 旧暦1月の新暦年（春節の年）
+  // 春節（旧暦1月1日）を探す
+  let lunarYear=gy;
+  for(let i=foundIdx;i>=0;i--){
+    if(SAKUJITSU[i][1]===1){
+      lunarYear=Math.floor(SAKUJITSU[i][0]/10000);
+      break;
+    }
+  }
+
+  const stemIdx=((lunarYear-4)%10+10)%10;
+  const branchIdx=((lunarYear-4)%12+12)%12;
+
+  // 日柱干支: JD基準で計算
+  const jd=toJD(gy,gm,gd);
+  const dStemIdx=((jd+40)%10+10)%10;
+  const dBranchIdx=((jd+40)%12+12)%12;
+
+  // 月柱干支: 年干支の天干番号×2＋月番号ベースで計算
+  const mBranchIdx=(lmonth+1)%12;
+  const mStemBase=(stemIdx%5)*2;
+  const mStemIdx=(mStemBase+(lmonth-1))%10;
+
+  // 六曜: (旧暦月+旧暦日) % 6
+  const rokuyo=ROKKI[(lmonth+lday)%6];
+
+  return{
+    month:lmonth,day:lday,isLeap,
+    lunarYear,
+    yearStem:STEMS[stemIdx],yearBranch:BRANCHES[branchIdx],animal:ANIMALS[branchIdx],
+    eto:STEMS[stemIdx]+BRANCHES[branchIdx],
+    mStem:STEMS[mStemIdx],mBranch:BRANCHES[mBranchIdx],
+    dStem:STEMS[dStemIdx],dBranch:BRANCHES[dBranchIdx],
+    rokuyo,
+  };
+}
+
+/* ===== NUMEROLOGY ===== */
+function getZodiac(m,d){
+  for(const z of ZODIAC){
+    const[sm,sd]=z.start,[em,ed]=z.end;
+    if(sm>em){if((m===sm&&d>=sd)||(m===em&&d<=ed))return z;}
+    else{if((m===sm&&d>=sd)||(m>sm&&m<em)||(m===em&&d<=ed))return z;}
+  }
+  return ZODIAC[0];
+}
+function reduceNum(n){
+  if([11,22,33].includes(n))return n;
+  while(n>9){n=String(n).split('').reduce((a,c)=>a+parseInt(c),0);if([11,22,33].includes(n))return n;}
+  return n;
+}
+function soulNumSteps(y,m,d){
+  const digits=(String(y)+String(m).padStart(2,'0')+String(d).padStart(2,'0')).split('').map(Number);
+  const steps=[digits.slice()];
+  let total=digits.reduce((a,c)=>a+c,0);
+  const finals=[total];
+  while(total>9&&![11,22,33].includes(total)){
+    const ds=String(total).split('').map(Number);
+    steps.push(ds);
+    total=ds.reduce((a,c)=>a+c,0);
+    finals.push(total);
+  }
+  return{digits,steps,result:total,finals};
+}
+function isMaster(n){return[11,22,33].includes(n);}
+
+/* ===== STORAGE ===== */
+function loadEntries(){try{return JSON.parse(localStorage.getItem('fortune_entries')||'[]');}catch(e){return[];}}
+function saveEntries(arr){localStorage.setItem('fortune_entries',JSON.stringify(arr));}
+
+/* ===== UI HELPERS ===== */
+function showTab(t){
+  document.getElementById('tab-input').classList.toggle('hidden',t!=='input');
+  document.getElementById('tab-saved').classList.toggle('hidden',t!=='saved');
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',(t==='input'&&i===0)||(t==='saved'&&i===1)));
+  if(t==='saved')renderSaved();
+}
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2400);
+}
+function calcStepsHTML(info){
+  const{digits,steps,result,finals}=info;
+  let h='<div class="calc-block">';
+  h+='<div class="calc-row"><span class="calc-label">数字を並べる：</span><div class="calc-digits">';
+  digits.forEach((d,i)=>{h+=`<span class="calc-d">${d}</span>`;if(i<digits.length-1)h+='<span class="calc-arrow">＋</span>';});
+  h+=`<span class="calc-arrow">＝</span><span class="calc-sum">${finals[0]}</span>`;
+  h+='</div></div>';
+  for(let s=1;s<steps.length;s++){
+    h+='<div class="calc-row"><span class="calc-label">さらに足す：</span><div class="calc-digits">';
+    steps[s].forEach((d,i)=>{h+=`<span class="calc-d">${d}</span>`;if(i<steps[s].length-1)h+='<span class="calc-arrow">＋</span>';});
+    h+=`<span class="calc-arrow">＝</span><span class="calc-sum">${finals[s]}</span>`;
+    h+='</div></div>';
+  }
+  h+=`<div style="font-size:12px;color:var(--ink-muted);margin-top:4px">→ ソウルナンバー：<strong style="color:var(--accent);font-family:'Shippori Mincho',serif;font-size:15px">${result}</strong>${isMaster(result)?'（マスターナンバー）':''}</div>`;
+  h+='</div>';
+  return h;
+}
+
+let _cur=null;
+
+function calc(){
+  const y=parseInt(document.getElementById('bdate-y').value,10);
+  const m=parseInt(document.getElementById('bdate-m').value,10);
+  const d=parseInt(document.getElementById('bdate-d').value,10);
+  if(!y||!m||!d){toast('年・月・日をすべて入力してください');return;}
+  if(y<1920||y>2025||m<1||m>12||d<1||d>31){toast('正しい日付を入力してください');return;}
+  const v=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const nick=document.getElementById('nickname').value.trim()||'名無し';
+  const z=getZodiac(m,d);
+  const snInfo=soulNumSteps(y,m,d);
+  const sn=snInfo.result;
+  const lunar=toLunar(y,m,d);
+  let lsn=null,lsnInfo=null;
+  if(lunar){lsnInfo=soulNumSteps(y,lunar.month,lunar.day);lsn=lsnInfo.result;}
+  _cur={nick,dob:v,y,m,d,z,sn,snInfo,lunar,lsn,lsnInfo};
+  renderResult(_cur);
+  document.getElementById('result').classList.remove('hidden');
+  document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderResult(e){
+  const{nick,y,m,d,z,sn,snInfo,lunar,lsn,lsnInfo}=e;
+  const elemColor={火:'tag-coral',土:'tag-gold',風:'tag-teal',水:'tag-purple'};
+  const ec=elemColor[z.elem]||'tag-purple';
+  document.getElementById('res-avatar').textContent=nick.slice(0,2);
+  document.getElementById('res-name').textContent=nick;
+  document.getElementById('res-date').textContent=`${y}年${m}月${d}日生まれ`;
+
+
+
+  const elemBg={'火':'#fff0ec','土':'#f5f0e8','風':'#e8f0f5','水':'#e8f5f0'};
+  const elemFg={'火':'#a03030','土':'#6b5a20','風':'#305080','水':'#2a7f60'};
+  const bg=elemBg[z.elem]||'var(--accent-light)';
+  const fg=elemFg[z.elem]||'var(--accent)';
+
+  document.getElementById('sections').innerHTML=`
+    <div class="result-panel">
+      <!-- 星座 -->
+      <div class="rp-zodiac">
+        <div class="rp-zodiac-top">
+          <span class="rp-sym">${z.sym}</span>
+          <div>
+            <div class="rp-name">${z.name}</div>
+            <div class="rp-en">${z.en}</div>
+          </div>
+        </div>
+        <span class="rp-elem" style="background:${bg};color:${fg}">${z.elem}のサイン　支配星 ${z.ruling}</span>
+        <p class="rp-desc">${z.desc}</p>
+      </div>
+
+      ${lunar?('<div class="lunar-bar"><div class="lunar-bar-item"><span class="lbi-label">旧暦</span><span class="lbi-val">'+lunar.lunarYear+'年'+(lunar.isLeap?'閏':'')+lunar.month+'月'+lunar.day+'日</span></div><span class="lbi-sep">|</span><div class="lunar-bar-item"><span class="lbi-label">六曜</span><span class="lbi-val">'+lunar.rokuyo+'</span></div></div>'):''}
+
+      <!-- ソウルナンバー -->
+      <div class="sn-row">
+        <div class="sn-cell">
+          <div class="sn-label">ソウルナンバー（新暦）</div>
+          <div class="sn-num">${sn}</div>
+          ${isMaster(sn)?'<div class="sn-master">Master Number</div>':''}
+          <div class="sn-kw">${SOUL_INFO[sn].kw}</div>
+        </div>
+        ${(lunar&&lsn)?('<div class="sn-cell"><div class="sn-label">ソウルナンバー（旧暦）</div><div class="sn-num">'+lsn+'</div>'+(isMaster(lsn)?'<div class="sn-master">Master Number</div>':'')+'<div class="sn-kw">'+SOUL_INFO[lsn].kw+'</div></div>'):''}
+      </div>
+
+      <!-- 星座詳細 -->
+      <div class="sn-steps">
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.85;padding:1rem 0 0.5rem">${SOUL_INFO[sn].desc}</p>
+      </div>
+
+      <!-- 計算ステップ -->
+      <div class="sn-steps">
+        <div class="sn-steps-title">計算の流れ（${y}年${m}月${d}日）</div>
+        ${calcStepsHTML(snInfo)}
+        ${(lunar&&lsn&&lsn!==sn&&lsnInfo)?('<div class="sn-steps-title" style="margin-top:0.75rem">旧暦（'+(lunar.isLeap?'閏':'')+lunar.month+'月'+lunar.day+'日）</div>'+calcStepsHTML(lsnInfo)):''}
+      </div>
+    </div>
+  `;
+}
+
+/* ===== SAVE ===== */
+function saveEntry(){
+  if(!_cur){toast('先に占ってください');return;}
+  const entries=loadEntries();
+  if(entries.find(e=>e.nick===_cur.nick&&e.dob===_cur.dob)){toast('同じニックネーム＋誕生日はすでに保存済みです');return;}
+  const{nick,dob,y,m,d,sn,lsn,lunar}=_cur;const z=_cur.z;
+  entries.unshift({
+    id:Date.now(),nick,dob,y,m,d,savedAt:new Date().toLocaleDateString('ja-JP'),
+    zName:z.name,zSym:z.sym,zElem:z.elem,zRuling:z.ruling,zKeyword:z.keyword,zEn:z.en,zDesc:z.desc,
+    sn,lsn,
+    lunarYear:lunar?lunar.lunarYear:null,lunarMonth:lunar?lunar.month:null,lunarDay:lunar?lunar.day:null,
+    lunarIsLeap:lunar?lunar.isLeap:false,lunarRokuyo:lunar?lunar.rokuyo:null,
+  });
+  saveEntries(entries);
+  toast(nick+' を保存しました ✦');
+}
+
+/* ===== SAVED LIST ===== */
+function renderSaved(){
+  const entries=loadEntries();
+  const wrap=document.getElementById('saved-list-wrap');
+  if(!entries.length){
+    wrap.innerHTML='<div class="empty-state"><div class="empty-icon">☽</div><div>保存された記録がありません<br>「新しく占う」タブから占って保存してみましょう</div></div>';
+    return;
+  }
+  wrap.innerHTML='<div class="saved-list">'+entries.map(e=>{
+    const lunarSn=e.lsn||(e.lunarMonth?soulNumSteps(e.y,e.lunarMonth,e.lunarDay).result:null);
+    const dobParts=e.dob.split('-');const dobStr=dobParts[0]+'年'+parseInt(dobParts[1])+'月'+parseInt(dobParts[2])+'日';
+    const lunarDateStr=e.lunarMonth?((e.lunarYear?e.lunarYear+'年':'')+(e.lunarIsLeap?'閏':'')+e.lunarMonth+'月'+e.lunarDay+'日'):'—';
+    return `
+    <div class="saved-card" onclick="viewEntry(${e.id})">
+      <div>
+        <div class="sc-top">
+          <div class="sc-avatar">${e.nick.slice(0,2)}</div>
+          <div>
+            <div class="sc-name">${e.nick}</div>
+            <div class="sc-date">${dobStr}（新暦）　${lunarDateStr}（旧暦）</div>
+          </div>
+        </div>
+        <div class="sc-data">
+          <div class="sc-item">
+            <div class="sc-item-label">星座</div>
+            <div class="sc-item-val" style="font-size:15px">${e.zSym} ${e.zName}</div>
+          </div>
+          <div class="sc-item">
+            <div class="sc-item-label">ソウル（新暦）</div>
+            <div class="sc-item-val">${e.sn}</div>
+            <div class="sc-item-sub">${SOUL_INFO[e.sn]?.kw||''}</div>
+          </div>
+          <div class="sc-item">
+            <div class="sc-item-label">ソウル（旧暦）</div>
+            <div class="sc-item-val">${lunarSn||'—'}</div>
+            <div class="sc-item-sub">${lunarSn?SOUL_INFO[lunarSn]?.kw||'':''}</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-danger" onclick="event.stopPropagation();deleteEntry(${e.id})">削除</button>
+    </div>
+  `}).join('')+'</div>';
+}
+
+function viewEntry(id){
+  const e=loadEntries().find(x=>x.id===id);if(!e)return;
+  const z=ZODIAC.find(z=>z.name===e.zName)||{name:e.zName,sym:e.zSym,elem:e.zElem,ruling:e.zRuling,keyword:e.zKeyword,en:e.zEn,desc:e.zDesc,start:[1,1],end:[1,1]};
+  const snInfo=soulNumSteps(e.y,e.m,e.d);
+  const lunar=toLunar(e.y,e.m,e.d);
+  let lsn=null,lsnInfo=null;
+  if(lunar){lsnInfo=soulNumSteps(e.y,lunar.month,lunar.day);lsn=lsnInfo.result;}
+  _cur={nick:e.nick,dob:e.dob,y:e.y,m:e.m,d:e.d,z,sn:e.sn,snInfo,lunar,lsn,lsnInfo};
+  document.getElementById('nickname').value=e.nick;
+  const dobParts=e.dob.split('-');
+  document.getElementById('bdate-y').value=parseInt(dobParts[0]);
+  document.getElementById('bdate-m').value=parseInt(dobParts[1]);
+  document.getElementById('bdate-d').value=parseInt(dobParts[2]);
+  renderResult(_cur);
+  document.getElementById('result').classList.remove('hidden');
+  showTab('input');
+  setTimeout(()=>document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+function deleteEntry(id){
+  if(!confirm('この記録を削除しますか？'))return;
+  saveEntries(loadEntries().filter(e=>e.id!==id));
+  renderSaved();toast('削除しました');
+}
+</script>
+</body>
+</html>
