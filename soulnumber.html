@@ -760,7 +760,7 @@ function renderResult(e){
       <div class="sn-steps">
         <div class="sn-steps-title">計算の流れ（${y}年${m}月${d}日）</div>
         ${calcStepsHTML(snInfo)}
-        ${(lunar&&lsn&&lsn!==sn&&lsnInfo)?('<div class="sn-steps-title" style="margin-top:0.75rem">旧暦（'+(lunar.isLeap?'閏':'')+lunar.month+'月'+lunar.day+'日）</div>'+calcStepsHTML(lsnInfo)):''}
+        ${(lunar&&lsn&&lsnInfo)?('<div class="sn-steps-title" style="margin-top:0.75rem">旧暦（'+(lunar.isLeap?'閏':'')+lunar.month+'月'+lunar.day+'日）</div>'+calcStepsHTML(lsnInfo)):''}
       </div>
     </div>
   `;
