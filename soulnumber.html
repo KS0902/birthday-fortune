@@ -111,6 +111,27 @@ input:focus{border-color:var(--accent)}
 .summary-table td{padding:8px 0;border-bottom:0.5px solid var(--border);vertical-align:top;line-height:1.7}
 .summary-table td:first-child{color:var(--ink-muted);width:38%}
 .summary-table tr:last-child td{border-bottom:none}
+.compat-select-area{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius);padding:1.5rem 1.75rem;margin-bottom:1rem}
+.compat-select-row{display:grid;grid-template-columns:1fr auto 1fr;gap:0.75rem;align-items:end}
+.compat-select-label{font-size:10px;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:6px}
+.compat-select{width:100%;height:44px;padding:0 12px;font-family:'Noto Sans JP',sans-serif;font-size:14px;color:var(--ink);background:var(--paper);border:0.5px solid var(--border);border-radius:8px;outline:none;appearance:none;-webkit-appearance:none}
+.compat-select:focus{border-color:var(--accent)}
+.compat-heart{font-size:22px;color:var(--accent);padding-bottom:8px;text-align:center}
+.compat-result-panel{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:1rem}
+.compat-profiles{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:0.5rem;padding:1.25rem 1.5rem;border-bottom:0.5px solid var(--border)}
+.compat-profile{text-align:center}
+.compat-profile-avatar{width:44px;height:44px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-family:'Shippori Mincho',serif;font-size:18px;color:var(--accent);margin:0 auto 0.4rem}
+.compat-profile-name{font-family:'Shippori Mincho',serif;font-size:15px;font-weight:500;color:var(--ink)}
+.compat-profile-sn{font-size:11px;color:var(--ink-muted);margin-top:2px}
+.compat-profile-sep{font-size:20px;color:var(--ink-muted);text-align:center}
+.compat-section{padding:1.25rem 1.5rem;border-bottom:0.5px solid var(--border)}
+.compat-section:last-child{border-bottom:none}
+.compat-section-label{font-size:10px;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:0.5rem}
+.compat-score{font-family:'Shippori Mincho',serif;font-size:36px;font-weight:600;line-height:1;margin-bottom:0.4rem}
+.compat-title{font-family:'Shippori Mincho',serif;font-size:17px;font-weight:500;color:var(--ink);margin-bottom:0.6rem}
+.compat-desc{font-size:13px;color:var(--ink-soft);line-height:1.85}
+.compat-select-block{min-width:0}
+@media(max-width:480px){.compat-select-row{grid-template-columns:1fr auto 1fr;gap:0.4rem}}
 .hidden{display:none}
 .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;font-size:13px;padding:10px 20px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;z-index:100;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -135,7 +156,8 @@ input:focus{border-color:var(--accent)}
   </div>
   <div class="tabs">
     <button class="tab active" onclick="showTab('input')">✦ 新しく占う</button>
-    <button class="tab" onclick="showTab('saved')">☽ 保存済み一覧</button>
+    <button class="tab" onclick="showTab('saved')">☽ 保存済み</button>
+    <button class="tab" onclick="showTab('compat')">♡ 相性診断</button>
   </div>
   <div id="tab-input">
     <div class="input-card">
@@ -167,6 +189,9 @@ input:focus{border-color:var(--accent)}
   </div>
   <div id="tab-saved" class="hidden">
     <div id="saved-list-wrap"></div>
+  </div>
+  <div id="tab-compat" class="hidden">
+    <div id="compat-wrap"></div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -660,8 +685,10 @@ function saveEntries(arr){localStorage.setItem('fortune_entries',JSON.stringify(
 function showTab(t){
   document.getElementById('tab-input').classList.toggle('hidden',t!=='input');
   document.getElementById('tab-saved').classList.toggle('hidden',t!=='saved');
-  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',(t==='input'&&i===0)||(t==='saved'&&i===1)));
+  document.getElementById('tab-compat').classList.toggle('hidden',t!=='compat');
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',(t==='input'&&i===0)||(t==='saved'&&i===1)||(t==='compat'&&i===2)));
   if(t==='saved')renderSaved();
+  if(t==='compat')renderCompat();
 }
 function toast(msg){
   const el=document.getElementById('toast');
@@ -701,7 +728,7 @@ function calc(){
   const sn=snInfo.result;
   const lunar=toLunar(y,m,d);
   let lsn=null,lsnInfo=null;
-  if(lunar){lsnInfo=soulNumSteps(y,lunar.month,lunar.day);lsn=lsnInfo.result;}
+  if(lunar){lsnInfo=soulNumSteps(lunar.lunarYear,lunar.month,lunar.day);lsn=lsnInfo.result;}
   _cur={nick,dob:v,y,m,d,z,sn,snInfo,lunar,lsn,lsnInfo};
   renderResult(_cur);
   document.getElementById('result').classList.remove('hidden');
@@ -833,7 +860,7 @@ function viewEntry(id){
   const snInfo=soulNumSteps(e.y,e.m,e.d);
   const lunar=toLunar(e.y,e.m,e.d);
   let lsn=null,lsnInfo=null;
-  if(lunar){lsnInfo=soulNumSteps(e.y,lunar.month,lunar.day);lsn=lsnInfo.result;}
+  if(lunar){lsnInfo=soulNumSteps(lunar.lunarYear,lunar.month,lunar.day);lsn=lsnInfo.result;}
   _cur={nick:e.nick,dob:e.dob,y:e.y,m:e.m,d:e.d,z,sn:e.sn,snInfo,lunar,lsn,lsnInfo};
   document.getElementById('nickname').value=e.nick;
   const dobParts=e.dob.split('-');
@@ -850,6 +877,168 @@ function deleteEntry(id){
   if(!confirm('この記録を削除しますか？'))return;
   saveEntries(loadEntries().filter(e=>e.id!==id));
   renderSaved();toast('削除しました');
+}
+
+/* ===== COMPATIBILITY ===== */
+const COMPAT = {
+  // [小さい数-大きい数] の形式で45通り + 同数11通り = 全組み合わせ
+  '1-1':{score:'◎',title:'同じ魂の共鳴',desc:'意志の強さと独立心が共鳴し合う関係。お互いを刺激しながら高め合えますが、意見がぶつかったときは一歩引く余裕が大切です。'},
+  '1-2':{score:'○',title:'リードと支えの関係',desc:'1が方向を示し、2がそれを支える自然な流れ。バランスが取れていますが、2が自分の気持ちを後回しにしすぎないよう注意して。'},
+  '1-3':{score:'◎',title:'創造力が爆発するペア',desc:'1の行動力と3の表現力が掛け合わさると、アイデアが形になりやすい。一緒にいると楽しく、新しいことへの意欲が湧いてきます。'},
+  '1-4':{score:'△',title:'速度の違いを超えて',desc:'1のスピード感と4の慎重さは対照的。ぶつかることもありますが、補い合えれば理想的なチームになれます。焦らないことが鍵。'},
+  '1-5':{score:'◎',title:'冒険と自由の同志',desc:'どちらも変化を恐れない性質で、一緒にいると世界が広がる感覚があります。束縛し合わないことで、長く続く関係に。'},
+  '1-6':{score:'○',title:'守る者と進む者',desc:'6の温かさが1を包み込み、1の推進力が6に勇気を与えます。家庭的な安心感とチャレンジ精神が共存できるペア。'},
+  '1-7':{score:'○',title:'深さと強さの出会い',desc:'7の内省的な深みと1の強い意志は、ゆっくり時間をかけると深い信頼関係に育ちます。急ぎすぎないことが大切。'},
+  '1-8':{score:'◎',title:'目標を共に追う関係',desc:'どちらも野心と実行力があり、大きなことを一緒に成し遂げられます。競争よりも協力を選べれば最強のペア。'},
+  '1-9':{score:'○',title:'個と宇宙のつながり',desc:'1の個人的な意志と9の大きな視野が組み合わさると、お互いの視界が広がります。価値観の違いを楽しめる関係。'},
+  '1-11':{score:'◎',title:'インスピレーションの連鎖',desc:'1の行動力と11の直感力が組み合わさると、互いに閃きを与え合います。精神的な刺激が強く、特別な縁を感じやすいペア。'},
+  '1-22':{score:'○',title:'夢を現実にする力',desc:'22の大きなビジョンに1の突破力が加わると、不可能が可能になることも。スケールの大きな目標を共有できる関係。'},
+  '1-33':{score:'○',title:'強さと愛の融合',desc:'33の無償の愛が1の孤独を癒し、1のエネルギーが33の夢を広げます。お互いに深いものを与え合えるペア。'},
+  '2-2':{score:'○',title:'共感と調和の世界',desc:'お互いの気持ちがよくわかる穏やかな関係。ただし遠慮し合いすぎて本音が言えなくなることも。定期的に素直に話し合って。'},
+  '2-3':{score:'◎',title:'感性が豊かな二人',desc:'2の繊細な感受性と3の明るい表現力がうまく混ざり合い、一緒にいると心が豊かになります。楽しさと深さを両立できるペア。'},
+  '2-4':{score:'○',title:'安定を共に築く',desc:'どちらも誠実で信頼を大切にする性質。地道に関係を育てていくことで、揺るぎない絆が生まれます。'},
+  '2-5':{score:'△',title:'安定と変化の綱引き',desc:'2が求める安定と5が求める自由は時に衝突します。お互いの必要なものを尊重し合う対話が関係を救います。'},
+  '2-6':{score:'◎',title:'愛情が循環する関係',desc:'どちらも人を大切にする心を持ち、自然と愛情が循環します。居心地のよさが抜群で、長期的な関係に向いています。'},
+  '2-7':{score:'○',title:'心の奥で通じ合う',desc:'言葉より感覚でわかり合える不思議な縁。7の孤独に2が寄り添い、2の不安を7の洞察が解きほぐします。'},
+  '2-8':{score:'△',title:'感情と現実のバランス',desc:'8の現実志向と2の感情優先は時にすれ違います。お互いが少しずつ歩み寄ることで、強いパートナーシップになれます。'},
+  '2-9':{score:'◎',title:'思いやりが響き合う',desc:'2の細やかな気遣いと9の広い愛情が共鳴します。一緒にいると自然と人のために動ける、温かいペア。'},
+  '2-11':{score:'◎',title:'感性の深い共鳴',desc:'どちらも感受性が高く、言葉にならない部分で通じ合います。精神的な絆が強く、魂のレベルでつながれるペア。'},
+  '2-22':{score:'○',title:'夢を支え合う関係',desc:'22の大きな夢を2が丁寧にサポート。縁の下の力持ちとして、大きなものを一緒に育てられます。'},
+  '2-33':{score:'◎',title:'愛に満ちた世界',desc:'2と33はどちらも愛と調和を大切にする魂。一緒にいると周囲まで温かくなるような、深い愛情に満ちた関係。'},
+  '3-3':{score:'◎',title:'陽気さが倍になるペア',desc:'楽しさとユーモアが爆発する組み合わせ。一緒にいると笑いが絶えませんが、深刻な話し合いも大切にして。'},
+  '3-4':{score:'○',title:'夢と現実を橋渡し',desc:'3のアイデアを4がしっかり形にしてくれます。計画倒れになりがちな夢が現実になる、頼もしい組み合わせ。'},
+  '3-5':{score:'◎',title:'自由と楽しさの連鎖',desc:'どちらも変化と楽しさを求め、一緒にいると毎日が刺激的。マンネリとは無縁の、エネルギッシュな関係です。'},
+  '3-6':{score:'○',title:'明るさと温かさの共存',desc:'3の明るさが場を盛り上げ、6の温かさが人を引き寄せます。自然と人が集まってくる、華やかなペア。'},
+  '3-7':{score:'△',title:'表と奥の対比',desc:'3の社交的な明るさと7の内向きな深さは対照的。理解し合うのに時間がかかりますが、違いが新鮮さになることも。'},
+  '3-8':{score:'○',title:'表現と実現の組み合わせ',desc:'3のアイデアと8の実行力は相性がいい。お互いの強みを活かせれば、大きな成果を生み出せるペア。'},
+  '3-9':{score:'◎',title:'創造と奉仕の融合',desc:'3の創造力と9の奉仕の精神が組み合わさると、人の役に立つ形で才能を発揮できます。一緒にいると世界が広がる感覚。'},
+  '3-11':{score:'◎',title:'インスピレーションの嵐',desc:'3の表現力と11の直感が組み合わさると、次々と新しいアイデアが生まれます。創作活動や芸術面での相性が特に良いペア。'},
+  '3-22':{score:'○',title:'アイデアを世界に届ける',desc:'3の発想力と22の実現力が組み合わさると、多くの人に影響を与えるものを生み出せます。スケールの大きな関係。'},
+  '3-33':{score:'◎',title:'喜びを分かち合う魂',desc:'3と33はどちらも人に喜びを与える性質。一緒にいると周りまで幸せにできる、輝きのある関係です。'},
+  '4-4':{score:'○',title:'堅実さが信頼を生む',desc:'どちらも誠実で責任感が強く、ゆっくりと深い信頼関係を築けます。変化への柔軟性も忘れずに。'},
+  '4-5':{score:'△',title:'安定と冒険の葛藤',desc:'4が望む安定と5が求める変化は真逆。でもその違いがお互いの視野を広げてくれることも。違いを楽しむ余裕が大切。'},
+  '4-6':{score:'◎',title:'家庭と安心の土台',desc:'どちらも愛情深く責任感がある性質。一緒にいると自然と安心できる場所が生まれます。長期的な関係に特に向いています。'},
+  '4-7':{score:'○',title:'深みのある静かな絆',desc:'どちらも表面的な付き合いより深いつながりを好みます。時間をかけて育てる、本物の信頼関係になれるペア。'},
+  '4-8':{score:'◎',title:'現実を共に動かす力',desc:'どちらも地道な努力と実現力を持ち、一緒に取り組むと確かな結果を出せます。仕事でも人生でも頼り合える関係。'},
+  '4-9':{score:'○',title:'地に足ついた理想家',desc:'4の現実感覚と9の理想主義が合わさると、夢が地に足のついた形で実現していきます。補い合える関係。'},
+  '4-11':{score:'○',title:'直感に形を与える',desc:'11の直感を4の実行力が形にします。アイデア倒れになりがちな11に、4が現実の橋渡しをしてくれるペア。'},
+  '4-22':{score:'◎',title:'大きなものを着実に',desc:'22の壮大なビジョンと4の着実な実行力は最高の組み合わせ。長期的に大きなことを成し遂げられるペア。'},
+  '4-33':{score:'○',title:'愛を形にする力',desc:'33の大きな愛を4が現実の形にしていきます。精神的なものと現実的なものをバランスよく両立できる関係。'},
+  '5-5':{score:'◎',title:'自由人同士の冒険',desc:'束縛なく、お互いの自由を尊重し合えます。毎日が新鮮で刺激的。ただし根を張ることも時には意識して。'},
+  '5-6':{score:'△',title:'自由と責任のはざまで',desc:'5の自由への欲求と6の責任感は時に衝突。でも5が6の温かさに安らぎを感じ、6が5の明るさに励まされることも。'},
+  '5-7':{score:'○',title:'探求する二人',desc:'5は外の世界を、7は内側を探求します。向いている方向は違えど、知ることへの情熱で深くつながれるペア。'},
+  '5-8':{score:'○',title:'自由と成功の組み合わせ',desc:'5の柔軟な発想と8の実行力が合わさると、型にはまらない方法で目標を達成できます。お互いの強みが活きる関係。'},
+  '5-9':{score:'◎',title:'世界を駆ける魂',desc:'どちらも広い視野と自由な精神を持ちます。一緒にいると世界が広がり、大きな夢に向かって走れるペア。'},
+  '5-11':{score:'◎',title:'直感と行動の連鎖',desc:'11の鋭い直感を5がすぐ行動に移します。スピード感があり、変化の中で輝ける、エネルギッシュな関係。'},
+  '5-22':{score:'○',title:'自由な発想を世界へ',desc:'5の自由な視点と22の実現力が組み合わさると、革新的なことを大きなスケールで実現できます。'},
+  '5-33':{score:'○',title:'喜びを広める旅人',desc:'5の好奇心と33の愛が合わさると、多くの人に喜びと自由を届けられます。広い世界で輝けるペア。'},
+  '6-6':{score:'◎',title:'愛情の深い安らぎ',desc:'お互いを深く思いやる、温かい関係。居心地が抜群によく、自然と長続きします。甘やかし合いすぎには注意して。'},
+  '6-7':{score:'△',title:'温かさと孤独の間で',desc:'6の人好きと7の孤独志向はすれ違いやすいですが、7の奥深さに6が魅了され、6の温かさに7が救われることも。'},
+  '6-8':{score:'○',title:'愛情と実力を兼ね備えて',desc:'6の人を思う心と8の実行力が合わさると、多くの人を助けながら目標も達成できます。社会的に活躍できるペア。'},
+  '6-9':{score:'◎',title:'人を愛する大きな心',desc:'どちらも人への愛情を持ち、自然と人のために動けます。一緒にいると周囲まで幸せになれる、理想的な関係。'},
+  '6-11':{score:'◎',title:'愛と直感が交わる場所',desc:'6の深い愛情と11のスピリチュアルな直感が組み合わさると、人の心に寄り添う特別な力を発揮できます。'},
+  '6-22':{score:'○',title:'愛を形に変える力',desc:'6の愛情を22が大きなスケールで実現します。多くの人の幸せのために動ける、志の高いペア。'},
+  '6-33':{score:'◎',title:'無限の愛の共鳴',desc:'6と33はどちらも愛と奉仕が魂の核心。一緒にいると深い慈愛が生まれ、周囲の人まで温かくなります。'},
+  '7-7':{score:'○',title:'孤独な魂の邂逅',desc:'お互いの深さを理解できる稀な関係。一人の時間も大切にしながら、精神的な深みで結ばれます。'},
+  '7-8':{score:'△',title:'哲学と現実の対話',desc:'7の精神世界と8の現実志向は相容れないように見えますが、お互いに欠けているものを補い合える関係でもあります。'},
+  '7-9':{score:'◎',title:'知恵と愛の融合',desc:'7の深い洞察と9の広い愛情が組み合わさると、人の本質に触れるような深い関係が生まれます。魂的な縁を感じやすいペア。'},
+  '7-11':{score:'◎',title:'神秘的な共鳴',desc:'どちらも目に見えない世界に敏感で、言葉にならないところで深く通じ合います。特別な縁を感じる、魂のレベルの関係。'},
+  '7-22':{score:'○',title:'内なる知恵を外へ',desc:'7の深い洞察を22が現実の形にしていきます。内側の世界と外側の世界をつなぐ、補い合える関係。'},
+  '7-33':{score:'◎',title:'深淵な愛と知恵',desc:'7の深い洞察と33の無限の愛が交わる場所には、特別な光があります。精神的に最も深い縁のひとつ。'},
+  '8-8':{score:'○',title:'実力者同士の関係',desc:'どちらも目標達成への強い意志を持ちます。競い合うより協力する道を選べれば、強力なパートナーになれます。'},
+  '8-9':{score:'△',title:'成功と奉仕の間で',desc:'8の成功志向と9の奉仕精神は時に方向性が違います。でもお互いの価値観を尊重できれば、大きな仕事ができるペア。'},
+  '8-11':{score:'○',title:'直感を現実にする',desc:'11の直感とビジョンを8の実行力が形にします。夢を実現するための、強力な組み合わせ。'},
+  '8-22':{score:'◎',title:'世界を動かす力',desc:'8と22はどちらも大きなことを成し遂げる力を持っています。一緒に取り組めば、社会を動かすほどのことができます。'},
+  '8-33':{score:'○',title:'力と愛で世界を変える',desc:'8の実行力と33の愛が合わさると、多くの人の生活を変えるほどの影響力を持てます。志の高いペア。'},
+  '9-9':{score:'◎',title:'宇宙的な共鳴',desc:'どちらも大きな愛と広い視野を持ち、深いところで共鳴し合います。一緒にいると人類愛のようなものが生まれる、特別なペア。'},
+  '9-11':{score:'◎',title:'愛と光の関係',desc:'9の完成された愛と11の光のような直感が交わります。精神的に非常に相性がよく、互いを高め合える縁。'},
+  '9-22':{score:'○',title:'愛を世界規模で実現',desc:'9の広い愛情を22が現実の大きな形にしていきます。世界をよくしたいという同じ方向性を持てるペア。'},
+  '9-33':{score:'◎',title:'愛の完成形',desc:'9と33は数秘術の中でも最も愛に満ちた数字。一緒にいると、人間の愛の可能性を体現するような深い関係になれます。'},
+  '11-11':{score:'◎',title:'直感の嵐',desc:'お互いの感受性が鋭すぎるほど共鳴します。刺激的で特別な縁ですが、感情的になりすぎないバランスも大切に。'},
+  '11-22':{score:'◎',title:'ビジョンを世界へ',desc:'11のインスピレーションと22の実現力は最高の組み合わせ。大きな夢を現実にできる、歴史に残るようなペア。'},
+  '11-33':{score:'◎',title:'光と愛の融合',desc:'11の光と33の愛が交わる最も神聖な組み合わせのひとつ。精神的に深く結ばれ、互いを高め合える特別な縁。'},
+  '22-22':{score:'◎',title:'世界を変える二人',desc:'どちらも大きなビジョンと実現力を持ちます。一緒に取り組めば、時代を変えるほどの力を発揮できます。'},
+  '22-33':{score:'◎',title:'愛で世界を作る',desc:'22の実現力と33の愛が合わさると、世界をより良くするための大きな力になります。使命感でつながれた関係。'},
+  '33-33':{score:'◎',title:'無限の愛',desc:'最も愛に満ちた組み合わせ。一緒にいるだけで周囲が幸せになるような、深い慈愛に包まれた特別な関係。'},
+};
+
+function getCompat(a, b){
+  const key = a<=b ? `${a}-${b}` : `${b}-${a}`;
+  return COMPAT[key] || {score:'○',title:'ユニークな組み合わせ',desc:'お互いの個性が独自の化学反応を起こします。違いを楽しみながら、二人だけの関係を育ててください。'};
+}
+
+function renderCompat(){
+  const entries = loadEntries();
+  const wrap = document.getElementById('compat-wrap');
+  if(entries.length < 2){
+    wrap.innerHTML='<div class="empty-state"><div class="empty-icon">♡</div><div>相性診断には2人以上の保存データが必要です<br>「新しく占う」タブで占って保存してみましょう</div></div>';
+    return;
+  }
+  let html = '<div class="compat-select-area">';
+  html += '<div class="compat-select-row">';
+  html += '<div class="compat-select-block"><div class="compat-select-label">ひとり目</div><select id="compat-a" class="compat-select">';
+  entries.forEach(e => { html += `<option value="${e.id}">${e.nick}（${e.sn}）</option>`; });
+  html += '</select></div>';
+  html += '<div class="compat-heart">♡</div>';
+  html += '<div class="compat-select-block"><div class="compat-select-label">ふたり目</div><select id="compat-b" class="compat-select">';
+  entries.forEach((e,i) => { html += `<option value="${e.id}" ${i===1?'selected':''}>${e.nick}（${e.sn}）</option>`; });
+  html += '</select></div>';
+  html += '</div>';
+  html += '<button class="btn" style="width:100%;margin-top:1rem" onclick="calcCompat()">相性を見る</button>';
+  html += '</div>';
+  html += '<div id="compat-result"></div>';
+  wrap.innerHTML = html;
+}
+
+function calcCompat(){
+  const entries = loadEntries();
+  const idA = parseInt(document.getElementById('compat-a').value);
+  const idB = parseInt(document.getElementById('compat-b').value);
+  if(idA === idB){ toast('別々の人を選んでください'); return; }
+  const a = entries.find(e=>e.id===idA);
+  const b = entries.find(e=>e.id===idB);
+  if(!a||!b) return;
+
+  // 新暦ソウルナンバーの相性
+  const compatNew = getCompat(a.sn, b.sn);
+
+  // 旧暦ソウルナンバーの相性（両方ある場合）
+  const aLunarSn = a.lsn||(a.lunarMonth?soulNumSteps(a.y,a.lunarMonth,a.lunarDay).result:null);
+  const bLunarSn = b.lsn||(b.lunarMonth?soulNumSteps(b.y,b.lunarMonth,b.lunarDay).result:null);
+  const compatLunar = (aLunarSn&&bLunarSn) ? getCompat(aLunarSn, bLunarSn) : null;
+
+  const scoreColor = {'◎':'var(--teal)','○':'var(--accent)','△':'var(--gold)'};
+
+  let html = '<div class="compat-result-panel">';
+
+  // 2人のプロフィール
+  html += '<div class="compat-profiles">';
+  html += `<div class="compat-profile"><div class="compat-profile-avatar">${a.nick.slice(0,2)}</div><div class="compat-profile-name">${a.nick}</div><div class="compat-profile-sn">新暦 ${a.sn}${aLunarSn?' / 旧暦 '+aLunarSn:''}</div></div>`;
+  html += '<div class="compat-profile-sep">×</div>';
+  html += `<div class="compat-profile"><div class="compat-profile-avatar">${b.nick.slice(0,2)}</div><div class="compat-profile-name">${b.nick}</div><div class="compat-profile-sn">新暦 ${b.sn}${bLunarSn?' / 旧暦 '+bLunarSn:''}</div></div>`;
+  html += '</div>';
+
+  // 新暦の相性
+  html += `<div class="compat-section">`;
+  html += `<div class="compat-section-label">新暦の相性　${a.sn} × ${b.sn}</div>`;
+  html += `<div class="compat-score" style="color:${scoreColor[compatNew.score]||'var(--accent)'}">${compatNew.score}</div>`;
+  html += `<div class="compat-title">${compatNew.title}</div>`;
+  html += `<div class="compat-desc">${compatNew.desc}</div>`;
+  html += '</div>';
+
+  // 旧暦の相性
+  if(compatLunar){
+    html += `<div class="compat-section">`;
+    html += `<div class="compat-section-label">旧暦の相性　${aLunarSn} × ${bLunarSn}</div>`;
+    html += `<div class="compat-score" style="color:${scoreColor[compatLunar.score]||'var(--accent)'}">${compatLunar.score}</div>`;
+    html += `<div class="compat-title">${compatLunar.title}</div>`;
+    html += `<div class="compat-desc">${compatLunar.desc}</div>`;
+    html += '</div>';
+  }
+
+  html += '</div>';
+  document.getElementById('compat-result').innerHTML = html;
+  document.getElementById('compat-result').scrollIntoView({behavior:'smooth',block:'start'});
 }
 </script>
 </body>
